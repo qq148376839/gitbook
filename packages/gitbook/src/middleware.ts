@@ -13,7 +13,7 @@ import {
     normalizeURL,
     throwIfDataError,
 } from '@/lib/data';
-import { GITBOOK_OAUTH_SERVER_URL, isGitBookAssetsHostURL, isGitBookHostURL } from '@/lib/env';
+import { GITBOOK_OAUTH_SERVER_URL, GITBOOK_URL, isGitBookAssetsHostURL, isGitBookHostURL } from '@/lib/env';
 import { getImageResizingContextId } from '@/lib/images';
 import { MiddlewareHeaders } from '@/lib/middleware';
 import { removeLeadingSlash, removeTrailingSlash } from '@/lib/paths';
@@ -111,8 +111,12 @@ async function validateServerActionRequest(request: NextRequest) {
  */
 function shouldFilterMaliciousRequests(requestURL: URL): boolean {
     // We want to filter hostnames that contains a port here as this is likely a malicious request.
+    // But allow the port if it matches the configured GITBOOK_URL port (for self-hosted deployments).
     if (requestURL.host.includes(':')) {
-        return true;
+        const gitbookPort = GITBOOK_URL ? new URL(GITBOOK_URL).port : '';
+        if (!gitbookPort || requestURL.port !== gitbookPort) {
+            return true;
+        }
     }
     // These requests will be rejected by the API anyway, we might as well do it right away.
     if (requestURL.pathname.endsWith(';.jsp')) {
