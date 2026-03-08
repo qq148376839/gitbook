@@ -1,10 +1,13 @@
 services:
   gitbook:
-    build: .
+    build:
+      context: .
+      args:
+        GITBOOK_URL: http://192.168.31.18:3002
     container_name: gitbook
     restart: unless-stopped
     ports:
       - "3002:3000"
     environment:
       - NODE_ENV=production
-      - GITBOOK_URL=http://localhost:3000
+      - GITBOOK_URL=http://192.168.31.18:3002

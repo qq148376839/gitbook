@@ -25,7 +25,8 @@ RUN cd node_modules/decode-named-character-reference && \
       delete pkg.exports['.'].browser; \
       require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
 
-ENV GITBOOK_URL=http://localhost:3000
+ARG GITBOOK_URL=http://localhost:3000
+ENV GITBOOK_URL=${GITBOOK_URL}
 ENV NODE_ENV=production
 RUN bun run build
 
@@ -33,7 +34,8 @@ RUN bun run build
 FROM node:22-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV GITBOOK_URL=http://localhost:3000
+ARG GITBOOK_URL=http://localhost:3000
+ENV GITBOOK_URL=${GITBOOK_URL}
 
 # Copy the Next.js standalone build and static assets
 COPY --from=builder /app/packages/gitbook/.next/standalone ./
