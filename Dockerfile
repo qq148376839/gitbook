@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM oven/bun:1.3.7 AS builder
+FROM oven/bun:latest AS builder
 WORKDIR /app
 COPY . .
 RUN bun install --frozen-lockfile
