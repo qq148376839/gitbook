@@ -569,7 +569,9 @@ function getSiteURLFromRequest(request: NextRequest): URLWithMode | null {
         };
     }
 
-    const isMainHost = isGitBookHostURL(request.url);
+    const xForwardedHost = request.headers.get('x-forwarded-host');
+    const isMainHost = isGitBookHostURL(request.url) ||
+        (xForwardedHost ? isGitBookHostURL(`https://${xForwardedHost}/`) : false);
     const isAssetsHost = isGitBookAssetsHostURL(request.url);
 
     // /url/:url requests on the main host
@@ -589,7 +591,6 @@ function getSiteURLFromRequest(request: NextRequest): URLWithMode | null {
         return null;
     }
 
-    const xForwardedHost = request.headers.get('x-forwarded-host');
     // The x-forwarded-host is set by Vercel for all requests
     // so we ignore it if the hostname is the same as the instance one.
     if (xForwardedHost) {
