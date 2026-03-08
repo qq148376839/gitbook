@@ -1,8 +1,29 @@
 # Stage 1: Build
-FROM oven/bun:latest AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
+
+# Install bun
+RUN apt-get update && apt-get install -y curl && \
+    curl -fsSL https://bun.sh/install | bash && \
+    ln -s /root/.bun/bin/bun /usr/local/bin/bun
+
 COPY . .
-RUN bun install --frozen-lockfile
+
+# Remove patchedDependencies to avoid bun patch bug on older kernels,
+# then install, then manually apply patches
+RUN node -e " \
+  const pkg = require('./package.json'); \
+  delete pkg.patchedDependencies; \
+  require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
+RUN bun install --frozen-lockfile || bun install
+
+# Manually apply patches
+RUN cd node_modules/decode-named-character-reference && \
+    node -e " \
+      const pkg = require('./package.json'); \
+      delete pkg.exports['.'].browser; \
+      require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
+
 ENV GITBOOK_URL=http://localhost:3000
 ENV NODE_ENV=production
 RUN bun run build
